@@ -1,0 +1,266 @@
+﻿
+
+<script>
+
+    $(function () {
+
+        var playerName = "@ViewBag.playerName";
+        var playerTeam = "@ViewBag.playerTeam";
+
+        var chat = $.connection.chatHub;
+        var chatcounter = 0;
+        $("#chatBox").attr('disabled', true);
+        $("#sendButton").attr('disabled', true);
+
+        $.connection.hub.start().done(function() {
+            console.log("test");
+
+            $("#chatBox").attr('disabled', false);
+            $("#sendButton").attr('disabled', false);
+
+            $("#sendButton").click(function () {
+
+                sendMessage();
+
+
+            });
+
+            updateBoard();
+        });
+
+        chat.client.broadcastMessage = function (team, name, message) {
+            if(team.localeCompare(playerTeam) === 0){
+                addNewChat(name, message);
+            }
+        };
+        chat.client.updateBoard = function(updateString) {
+            console.log(updateString);
+
+            var res = updateString.split(" ");
+
+            for (var i = 0; i < res.length; i++) {
+                console.log("test");
+                var imgloc = "";
+                switch (res[i]) {
+                    case "BR":
+                        imgloc = "../../Images/black_rook.png";
+                        break;
+                    case "BK":
+                        imgloc = "../../Images/black_knight.png";
+                        break;
+                    case "BB":
+                        imgloc = "../../Images/black_bishop.png";
+                        break;
+                    case "BKI":
+                        imgloc = "../../Images/black_king.png";
+                        break;
+                    case "BQ":
+                        imgloc = "../../Images/black_queen.png";
+                        break;
+                    case "BP":
+                        imgloc = "../../Images/black_pawn.png";
+                        break;
+                    case "WR":
+                        imgloc = "../../Images/white_rook.png";
+                        break;
+                    case "WK":
+                        imgloc = "../../Images/white_knight.png";
+                        break;
+                    case "WB":
+                        imgloc = "../../Images/white_bishop.png";
+                        break;
+                    case "WKI":
+                        imgloc = "../..//Images/white_king.png";
+                        break;
+                    case "WQ":
+                        imgloc = "../../Images/white_queen.png";
+                        break;
+                    case "WP":
+                        imgloc = "../../Images/white_pawn.png";
+                        break;
+                    case "#":
+                        imgloc = "";
+                        break;
+
+                }
+
+                $("#" + (i+1)).attr('src', imgloc);
+
+            }
+            
+
+        }
+        
+        chat.client.debugMessage = function(message) {
+            console.log(message);
+            $("#debugMessage").html(message);
+        }
+        chat.client.roundTimer = function(time) {
+            $("#timerbox").html(time);
+        }
+        chat.client.turnIndicate = function(team) {
+            $("#turnIndicator").html(team);
+        }
+
+        chat.client.updateGraph = function(data) {
+            console.log(data);
+
+            var list = data;
+            var graphData = new Array();
+
+            for (var i = 0; i < list.length; i++) {
+                var split = data[i].split(" ");
+
+                var ob = { y: parseInt(split[1]), label: split[0] }
+                graphData.push(ob);
+                console.log(graphData);
+            }
+       
+
+            var chart = new CanvasJS.Chart("votetally", {
+                title: {
+                    text: "Current Vote Tally"
+                },
+                data: [{
+                    type: "column",
+                    dataPoints: graphData
+                }]
+        
+            });
+
+            chart.render();
+        }
+
+        function addNewChat(name, text) {
+            var text = "<li class=" + "list-group-item" + ">" +
+                "<b>"+name+"</b>" + " | " + text + "</li>";
+            $("#chatBox").append(text);
+            $("#chatBox").animate({ scrollTop: 10000000 }, 0);
+            chatcounter++;
+            if (chatcounter > 50) {
+                removeChat();
+            }
+        }
+
+        function removeChat() {
+
+            for (var i = 0; i < 20; i++) {
+                $("#chatBox li").first().remove();
+            }
+            chatcounter = 0;
+        }
+
+        function updateBoard() {
+            $.ajax({
+                type: "POST",
+                url :'@Url.Action("GameBoard","Game")',
+                success: function (result) {
+                    $("#content").html(result);
+                    chat.server.updateBoard();
+                }
+
+            });
+
+        }
+
+        function sendMessage() {
+            var message = $("#messagebox").val();
+            $("#messagebox").val("");
+            chat.server.send(playerTeam,playerName, message);
+            addNewChat(playerName, message);
+        }
+    
+   
+        $(document).keypress(function (e) {
+            if (e.which == 13) {
+                var enabled = $("#sendButton").prop('disabled');
+                if (!enabled) {
+                    sendMessage();
+                }
+            }
+        });
+
+    });
+
+  
+
+
+</script>
+
+<style>
+    
+    #debugMessage {
+        font-weight: bold;
+    
+    }
+    #chatBox {
+        background-color: whitesmoke;
+        height: 600px;
+        border-left: black solid 1px;
+
+    }
+    #content {
+        border-bottom: silver solid 1px;
+        border-top: silver solid 1px;
+        border-right: silver solid 1px;
+        border-left: silver solid 1px;
+        
+        height: 600px;
+
+    }
+    .container #maincontainer {
+        max-width: none !important;
+        width: 970px;
+        margin-top: 10px;
+    }
+
+    .list-group-item {
+        margin-top: 2px;
+    }
+    #chatBox {
+        overflow-y: scroll;
+    }
+
+    #maintextBox {
+        width: 100%;
+    }
+ 
+
+</style>
+
+
+<div class="container" id="maincontainer">
+
+    <div class="row">
+        <div class="col-sm-8" id="timerbox"></div>
+        <div class="col-sm-4" id="turnIndicator"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12" id="debugMessage">Welcome to democracy chess </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-8" id="content"></div>
+        <div class="col-sm-4">
+            <ul class="list-group" id="chatBox" style="margin-top: 5px">
+
+            </ul>
+        </div>
+    </div>
+    
+    <div class="row" style="margin-top: 5px">
+        <div class="col-sm-8" id="votetally" style="height: 200px;">
+            
+        </div>
+            <div class="form-group">
+                <div class="col-sm-3">
+                    <textarea id="messagebox" maxlength="256" rows="3" contenteditable="false" placeholder="write a message or command here if you need help type -help"></textarea>
+                </div>
+                <div class="col-sm-1">
+                    <button id="sendButton" class="btn btn-default">@ViewBag.playerTeam send</button>
+                </div>
+                
+            </div>
+
+    </div>
+</div>

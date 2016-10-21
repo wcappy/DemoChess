@@ -1,0 +1,226 @@
+﻿@model List<Amazon.DynamoDBv2.DocumentModel.Document>
+
+<script>
+
+    var i = 0;
+    var roundLength;
+    var resultjson;
+    var roundList;
+
+    $(document).ready(function() {
+
+        $("#nextMove").click(function () {
+
+            i++;
+            if (i > roundLength) {
+                i = roundLength;
+            }
+
+            console.log(i);
+
+            var inputStr = resultjson.roundlist[i].boardState;
+       
+
+            updateBoard(inputStr);
+
+            var data = resultjson.roundlist[i].votes;
+            updateGraph(data);
+
+
+        });
+
+        $("#previousMove").click(function () {
+
+            i--;
+            if (i < 0) {
+                i = 0;
+            }
+            console.log(i);
+
+            var inputStr = resultjson.roundlist[i].boardState;
+            updateBoard(inputStr);
+
+            var data = resultjson.roundlist[i].votes;
+
+            updateGraph(data);
+
+        });
+
+        function getBoard() {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GameBoard","Game")',
+                success: function (result) {
+                    $("#maincontent").html(result);
+                }
+
+            });
+
+        }
+
+        function getJson(id) {
+            
+            $.ajax({
+                url: '@Url.Action("GetGame")',
+                type: 'POST',
+                data: { id: id },
+                success: function (result) {
+                    resultjson = JSON.parse(result);
+                    console.log(resultjson);
+                    var inputStr = resultjson.roundlist[0].boardState;
+                    roundLength = resultjson.roundlist.length - 1;
+                    console.log(inputStr);
+
+                    updateBoard(inputStr);
+
+                    var movekey = resultjson.roundlist[0].moveKey;
+                    var data = resultjson.roundlist[0].votes;
+                    updateGraph(data);
+
+                }
+
+            });
+        }
+
+        $("tr").click(function() {
+            var id = $(this).attr('id');
+
+            getBoard();
+            getJson(id);
+
+        });
+
+
+        function updateBoard(updateString) {
+            console.log(updateString);
+
+            var res = updateString.split(" ");
+
+            for (var i = 0; i < res.length; i++) {
+              //  console.log("test");
+                var imgloc = "";
+                switch (res[i]) {
+                    case "BR":
+                        imgloc = "../../Images/black_rook.png";
+                        break;
+                    case "BK":
+                        imgloc = "../../Images/black_knight.png";
+                        break;
+                    case "BB":
+                        imgloc = "../../Images/black_bishop.png";
+                        break;
+                    case "BKI":
+                        imgloc = "../../Images/black_king.png";
+                        break;
+                    case "BQ":
+                        imgloc = "../../Images/black_queen.png";
+                        break;
+                    case "BP":
+                        imgloc = "../../Images/black_pawn.png";
+                        break;
+                    case "WR":
+                        imgloc = "../../Images/white_rook.png";
+                        break;
+                    case "WK":
+                        imgloc = "../../Images/white_knight.png";
+                        break;
+                    case "WB":
+                        imgloc = "../../Images/white_bishop.png";
+                        break;
+                    case "WKI":
+                        imgloc = "../..//Images/white_king.png";
+                        break;
+                    case "WQ":
+                        imgloc = "../../Images/white_queen.png";
+                        break;
+                    case "WP":
+                        imgloc = "../../Images/white_pawn.png";
+                        break;
+                    case "#":
+                        imgloc = "";
+                        break;
+
+                }
+
+                $("#" + (i + 1)).attr('src', imgloc);
+
+            }
+
+
+        }
+
+        function updateGraph(data) {
+            console.log(data);
+            var list = data;
+            var graphData = new Array();
+
+            for (var i = 0; i < list.length; i++) {
+
+                var ob = { y: parseInt(list[i].count), label: list[i].moveKey }
+                graphData.push(ob);
+                console.log(graphData);
+            }
+
+
+            var chart = new CanvasJS.Chart("votetally", {
+                title: {
+                    text: "Vote Tally"
+                },
+                data: [{
+                    type: "column",
+                    dataPoints: graphData
+                }]
+
+            });
+
+            chart.render();
+        }
+    });
+
+</script>
+
+<div class="container" id="maincontent">
+
+    <h2>Previous Games</h2>
+
+    <table class="table table-striped">
+
+        <tr>
+            <th>Game Id</th>
+            <th>Time</th>
+            <th>Rating</th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            var dateTime = new DateTime(item["time"].AsLong());
+            <tr id="@item["gameId"]">
+
+                <td>@item["gameId"]</td>
+                <td>@dateTime.ToString()</td>
+
+            </tr>
+        }
+
+    </table>
+
+</div>
+
+<div id="gameboard">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-sm-2"><button class="btn btn-block btn-default" id="previousMove"> < </button> </div>
+
+
+            <div class="col-sm-8" id="votetally" style="height: 300px;">
+            </div>
+            <div class="col-sm-2"><button class="btn btn-block btn-default" id="nextMove"> > </button> </div>
+
+        </div>
+
+    </div>
+
+
+</div>

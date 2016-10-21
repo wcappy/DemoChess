@@ -1,0 +1,27 @@
+﻿@model string
+<script>
+
+    var json = JSON.parse(@Model);
+
+    $(document).ready(function() {
+        console.log(json);
+      
+        getBoard();
+
+        function getBoard() {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GameBoard","Game")',
+                success: function (result) {
+                    $("#maincontent").html(result);
+                }
+
+            });
+
+        }
+
+
+
+    });
+
+</script>

@@ -1,0 +1,97 @@
+﻿<style>
+    .customtable {
+        margin: 0 auto;
+        margin-top: 15px;
+    }
+     .header {
+         height: 64px;
+         width: 16px;
+         text-align: center;
+         font-weight: bold;
+     }
+    .odd {
+        height: 64px;
+        width: 64px;
+        background-color: rgb(118, 115, 109);
+        border: 0.5px black solid;
+    }
+
+    .even {
+        height: 64px;
+        width: 64px;
+        background-color: whitesmoke;
+        border: 0.5px black solid;
+    }
+
+</style>
+
+
+@{
+    <table class="customtable">
+
+        @{
+            int idnum = 1;
+            char c = 'a';
+            <tr>
+                <th></th>
+                @for (int i = 0; i < 8; i++)
+                {
+                    <th style="text-align: center">@c</th>
+                    c++;
+                }
+            </tr>
+            for (int i = 0; i < 8; i++)
+            {
+                <tr>
+                    @for (int j = -1; j < 8; j++)
+                    {
+                        if (j == -1)
+                        {
+                            <td class="header">@(i)</td>
+                        }
+                        else
+                        {
+                            if (i%2 == 0)
+                            {
+                                if (j%2 == 0)
+                                {
+                                    <td class="even">
+                                        <img id="@idnum" src=""/>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td  class="odd">
+                                        <img id="@idnum" src="" />
+                                    </td>
+                                }
+                            }
+                            else
+                            {
+                                if (j%2 == 0)
+                                {
+                                    <td  class="odd">
+                                        <img id="@idnum" src="" />
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td class="even">
+                                        <img id="@idnum" src="" />
+                                    </td>
+                                }
+                            }
+
+                            idnum++;
+                        }
+
+                    }
+                </tr>
+
+            }
+        }
+
+    </table>
+}
+
+

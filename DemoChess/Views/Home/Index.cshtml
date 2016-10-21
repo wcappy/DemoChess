@@ -1,0 +1,28 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="jumbotron">
+    <h2>Democracy Chess</h2>
+    <p class="lead">Democracy Chess is an online game where multiple people vote on a move for there
+        chosen team
+    </p>
+
+
+
+    @using (Html.BeginForm("Index", "Game", FormMethod.Post))
+    {
+        @Html.Label("Name")
+        <br/>
+        @Html.TextBox("playerName")
+        <br/>
+
+       @Html.Label("Black") <input type="radio" name="team" value="Black">
+       @Html.Label("White") <input type="radio" name="team" value="White">
+
+        <br/>
+
+        <input type="submit" value="Join Game">
+    }
+
+</div>
